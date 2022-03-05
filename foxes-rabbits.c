@@ -4,11 +4,11 @@
 #include <stdlib.h>
 
 int M,N;
-char* grid;
+char** grid;
 uint32_t seedW; 
 
 bool position_empty(int i, int j){
-    if(grid[M*i + j] == ' '){
+    if(grid[i][j] == ' '){
         return true;
     }else{
         return false;
@@ -16,7 +16,7 @@ bool position_empty(int i, int j){
 }
 
 void insert_animal(int i,int j, char atype){
- grid[i*M + j] = atype; //endereco de memoria contem este carater. Maneira manhosa de iterar colunas numa so linha
+    grid[i][j] = atype;
 }
 
 float r4_uni(uint32_t *seed)
@@ -47,29 +47,35 @@ void generate_element(int n, char atype, uint32_t *seed)
 }
 
 void worldPrinter(){
-    for(int k = 0; k < M*N; k++){
-        if(k % M == 0){
-            printf("\n");
+    for(int k = 0; k < N; k++){
+        for(int j = 0; j < M; j++){
+            printf("%c|",grid[k][j]);
         }
-        printf("%c|",grid[k]);
+        printf("\n");
     }
-    printf("\n");
 }
 
 
 
-//quick example to test: ./foxes-rabbits 22 4 4 3 2 2 1 10 4 123
+//quick example to test: ./foxes-rabbits 25 4 4 3 2 1 1 10 4 123
 int main(int argc, char* argv[]){ //app name[0], gen[1], M[2], N[3], n-rocks[4], n-rabbits[5], rabbit breeding[6], n-foxes[7], fox breeding[8], fox starve[9], seed[10]
     seedW = atoi(argv[10]);
     M = atoi(argv[2]);
     N = atoi(argv[3]);
-    grid = malloc(sizeof(char) * (M*N)); //numero de casas. Vamos pondo uma letra por cada espaco de memoria
-    
-    
-    for(int k = 0; k < (M*N); k++){
-        grid[k] = ' ';
-        printf("%d\n",k);
+    grid = malloc(sizeof(char*) * N);
+    for(int k = 0; k < N; k++){
+        grid[k] = malloc(M * sizeof(char));
     }
+
+    for(int k = 0; k < N;k++){
+        for(int j = 0; j < M; j++){
+            grid[k][j] = ' ';
+            printf("%d\n",k);
+        }
+    }
+    
+    
+
 
 
     int nrocks = atoi(argv[4]);
