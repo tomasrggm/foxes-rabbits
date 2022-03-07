@@ -31,5 +31,7 @@ int main(int argc, char* argv[]){ //app name[0], gen[1], M[2], N[3], n-rocks[4],
 
     worldPrinter();
 
+    printf("Finished\n");
+    
     return 1;
 }
