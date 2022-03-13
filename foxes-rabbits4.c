@@ -27,7 +27,7 @@ struct entity{
 
 
 bool position_empty(int i, int j){
-    return grid[i][j].name == ' ' || grid[i][j].name == 'V' || grid[i][j].name == 'Z';
+    return grid[i][j].name == ' ';
 }
 bool has_rabbit(int i,int j){
     return grid[i][j].name == 'R';
@@ -46,15 +46,7 @@ int calculate_movement(int i, int j, int p){
 void worldPrinter(){
     for(int k = 0; k < M; k++){
         for(int j = 0; j < N; j++){
-            if(grid[k][j].name == 'V'){
-                printf("F %d|",grid[k][j].lastGenEat);
-            }else if(grid[k][j].name == 'Z'){
-                printf("R %d|",grid[k][j].age);
-            }else{
-                printf("%c %d|",grid[k][j].name,grid[k][j].age);
-            }
-            
-            
+            printf("%c %d|",grid[k][j].name,grid[k][j].lastGenEat);
         }
         printf("\n");
     }
@@ -108,65 +100,71 @@ void generate_element(int n, char atype, uint32_t *seed)
 
 void move_rabbit(int i,int j,int og_i,int og_j){
     int bred = 0;
-    printf("IDADE EH %d\n",grid_temp[og_i][og_j].age);
-    if(grid_temp[og_i][og_j].age == breedingAgeR){
-        printf("ENTROU\n");
-        bred++;
+    
+
+    if(grid_temp[og_i][og_j].age >= breedingAgeR){
         grid_temp[og_i][og_j].age = 0;
+        bred++;
     }
     if(grid_temp[i][j].name == ' '){
-        grid_temp[i][j].name = 'R';
+        grid_temp[i][j].name = RABBIT;
         grid_temp[i][j].age = grid_temp[og_i][og_j].age;
     }
-    else if(is_there(i,j,'R') && grid_temp[og_i][og_j].age > grid_temp[i][j].age){
-        grid_temp[i][j].age = grid_temp[og_i][og_j].age;
-    }
-    else if(is_there(i,j,'F')){
+    else if(grid_temp[i][j].name == FOX){
         grid_temp[i][j].lastGenEat = 0;
     }
-    if(bred == 0){
-        grid_temp[og_i][og_j].age = 0;
-        grid_temp[og_i][og_j].name = ' ';
-        grid_temp[og_i][og_j].lastGenEat = 0;
+    else if(grid_temp[i][j].name == RABBIT && grid_temp[og_i][og_j].age > grid_temp[i][j].age){
+        grid_temp[i][j].age = grid_temp[og_i][og_j].age;
     }
+    grid_temp[og_i][og_j].age = 0;
+    if(bred == 0){
+        grid_temp[og_i][og_j].name = ' ';
+    }
+    
     grid_temp[i][j].moved = 1;
 
 }
 
 void move_fox(int i,int j,int og_i,int og_j){
     int bred = 0;
-    int starve = grid[og_i][og_j].lastGenEat;
-    if(grid_temp[og_i][og_j].age == breedingAgeF){
-        bred++;
+    int starve = grid_temp[og_i][og_j].lastGenEat;
+    
+
+    printf("VALORES SAO %d - %d\n",i,j);
+    if(grid_temp[og_i][og_j].age >= breedingAgeF){
         grid_temp[og_i][og_j].age = 0;
         grid_temp[og_i][og_j].lastGenEat = 0;
+        bred++;
     }
+
     if(grid_temp[i][j].name == ' '){
-        grid_temp[i][j].name = 'F';
-        grid_temp[i][j].age = grid[og_i][og_j].age;
+        grid_temp[i][j].name = FOX;
+        grid_temp[i][j].age = grid_temp[og_i][og_j].age;
         grid_temp[i][j].lastGenEat = starve;
     }
-    else if(is_there(i,j,'F')){
+    else if(grid_temp[i][j].name == FOX){
         if(grid_temp[i][j].lastGenEat == 0 && grid_temp[og_i][og_j].age > grid_temp[i][j].age){
-            grid_temp[i][j].age = grid_temp[og_i][og_j].age;
-        }
-        else if(starve > grid_temp[i][j].lastGenEat){
-            grid_temp[i][j].lastGenEat = starve;
             grid_temp[i][j].age = grid_temp[og_i][og_j].age;
         }
         else if(starve == grid_temp[i][j].lastGenEat && grid_temp[og_i][og_j].age > grid_temp[i][j].age){
             grid_temp[i][j].age = grid_temp[og_i][og_j].age;
         }
-    }else if(grid_temp[i][j].name == 'R'){
-        grid_temp[i][j].name = 'F';
+        else if(starve > grid_temp[i][j].lastGenEat){
+            grid_temp[i][j].age = grid_temp[og_i][og_j].age;
+            grid_temp[i][j].lastGenEat = starve;
+        }
+    }
+    else if(grid_temp[i][j].name == RABBIT){
+        grid_temp[i][j].name = FOX;
         grid_temp[i][j].age = grid_temp[og_i][og_j].age;
         grid_temp[i][j].lastGenEat = 0;
     }
+    grid_temp[og_i][og_j].age = 0;
+    grid_temp[og_i][og_j].lastGenEat = 0;
     if(bred == 0){
-        grid_temp[og_i][og_j].age = 0;
         grid_temp[og_i][og_j].name = ' ';
-        grid_temp[og_i][og_j].lastGenEat = 0;
     }
+
     grid_temp[i][j].moved = 1;
 }
 
@@ -275,18 +273,9 @@ void sub_generations(int flag){
         for(int j = p; j < N; j += 2){
             if((grid[k][j].name == FOX || grid[k][j].name == RABBIT) && grid[k][j].moved == 0){
                 int* moves = get_available_moves(k,j);
-                
                 if(moves[4] > 0){
-                    
                     int c = calculate_movement(k,j,moves[4]);
-                    
                     make_move(k,j,moves,c);
-                }else{
-                    
-                    if((grid[k][j].age >= breedingAgeF && grid[k][j].name == FOX) || (grid[k][j].age >= breedingAgeR && grid[k][j].name == RABBIT)){
-                        grid[k][j].age--;
-                        grid_temp[k][j].age--;
-                    }
                 }
                 free(moves);
             }
@@ -298,8 +287,8 @@ void copy_red(){
     for(int i = 0; i < M; i++){
         for(int j = 0; j < N; j++){
             grid[i][j].name = grid_temp[i][j].name;
-            grid[i][j].lastGenEat = grid_temp[i][j].lastGenEat;
             grid[i][j].age = grid_temp[i][j].age;
+            grid[i][j].lastGenEat = grid_temp[i][j].lastGenEat;
             grid[i][j].moved = grid_temp[i][j].moved;
         }
     }
@@ -309,50 +298,55 @@ void copy_black(){
     for(int i = 0; i < M; i++){
         for(int j = 0; j < N; j++){
             grid[i][j].name = grid_temp[i][j].name;
-            grid[i][j].lastGenEat = grid_temp[i][j].lastGenEat;
             grid[i][j].age = grid_temp[i][j].age;
+            grid[i][j].lastGenEat = grid_temp[i][j].lastGenEat;
             grid[i][j].moved = 0;
             grid_temp[i][j].moved = 0;
-            if(grid[i][j].lastGenEat == starvationAgeF){
-                grid[i][j].name = ' ';
-                grid[i][j].age = 0;
-                grid[i][j].lastGenEat = 0;
-                grid_temp[i][j].name = ' ';
-                grid_temp[i][j].age = 0;
-                grid_temp[i][j].lastGenEat = 0;
-            }
         }
     }
 }
 
 
 void generations(int n){
-    for(int i = 0; i < n; i++){
-        printf("GERACAO %d\n TURNO VERMELHO \n",i+1);
-        for(int k = 0; k < M; k++){
-            for(int p = 0; p < N;p++){
-                if(grid[k][p].name == FOX || grid[k][p].name == RABBIT){
-                    grid[k][p].age++;
-                    grid_temp[k][p].age++;
-                    if(grid[k][p].name == FOX){
-                        grid[k][p].lastGenEat++;
-                        grid_temp[k][p].lastGenEat++;
+    for(int k = 0; k < n; k++){
+        for(int i = 0; i < M; i++){
+            for(int j = 0; j < N; j++){
+                if(grid[i][j].name == FOX || grid[i][j].name == RABBIT){
+                    grid[i][j].age++;
+                    grid_temp[i][j].age++;
+                    if(grid[i][j].name == FOX){
+                        grid[i][j].lastGenEat++;
+                        grid_temp[i][j].lastGenEat++;
                     }
                 }
             }
-            
+        
+        
         }
-
+        printf("GERACAO %d\n VERMELHA\n",k+1);
         sub_generations(0);
         copy_red();
         worldPrinter();
-        printf("\n TURNO PRETO \n");
+        printf("PRETA\n");
         sub_generations(1);
         copy_black();
         worldPrinter();
-        
-        genCheck++;
+        for(int i = 0; i < M; i++){
+            for(int j = 0; j < N; j++){
+                if(grid[i][j].name == FOX && grid[i][j].lastGenEat == starvationAgeF){
+                    grid[i][j].name = ' ';
+                    grid[i][j].lastGenEat = 0;
+                    grid[i][j].age = 0;
+                    grid[i][j].moved = 0;
+                    grid_temp[i][j].name = ' ';
+                    grid_temp[i][j].lastGenEat = 0;
+                    grid_temp[i][j].age = 0;
+                    grid_temp[i][j].moved = 0;
+                }
+            }
+        }
     }
+    
 }
 
 //quick example to test: ./foxes-rabbits 25 4 4 3 2 1 1 10 4 123
