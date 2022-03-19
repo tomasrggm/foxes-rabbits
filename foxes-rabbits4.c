@@ -46,7 +46,7 @@ int calculate_movement(int i, int j, int p){
 void worldPrinter(){
     for(int k = 0; k < M; k++){
         for(int j = 0; j < N; j++){
-            printf("%c %d|",grid[k][j].name,grid[k][j].lastGenEat);
+            printf("%c %d %d|",grid[k][j].name, grid[k][j].age, grid[k][j].lastGenEat);
         }
         printf("\n");
     }
@@ -130,7 +130,6 @@ void move_fox(int i,int j,int og_i,int og_j){
     int starve = grid_temp[og_i][og_j].lastGenEat;
     
 
-    printf("VALORES SAO %d - %d\n",i,j);
     if(grid_temp[og_i][og_j].age >= breedingAgeF){
         grid_temp[og_i][og_j].age = 0;
         grid_temp[og_i][og_j].lastGenEat = 0;
@@ -140,7 +139,7 @@ void move_fox(int i,int j,int og_i,int og_j){
     if(grid_temp[i][j].name == ' '){
         grid_temp[i][j].name = FOX;
         grid_temp[i][j].age = grid_temp[og_i][og_j].age;
-        grid_temp[i][j].lastGenEat = starve;
+        grid_temp[i][j].lastGenEat = starve + 1;
     }
     else if(grid_temp[i][j].name == FOX){
         if(grid_temp[i][j].lastGenEat == 0 && grid_temp[og_i][og_j].age > grid_temp[i][j].age){
@@ -148,10 +147,11 @@ void move_fox(int i,int j,int og_i,int og_j){
         }
         else if(starve == grid_temp[i][j].lastGenEat && grid_temp[og_i][og_j].age > grid_temp[i][j].age){
             grid_temp[i][j].age = grid_temp[og_i][og_j].age;
+            grid_temp[i][j].lastGenEat++;
         }
         else if(starve > grid_temp[i][j].lastGenEat){
             grid_temp[i][j].age = grid_temp[og_i][og_j].age;
-            grid_temp[i][j].lastGenEat = starve;
+            grid_temp[i][j].lastGenEat = starve+1;
         }
     }
     else if(grid_temp[i][j].name == RABBIT){
@@ -276,6 +276,8 @@ void sub_generations(int flag){
                 if(moves[4] > 0){
                     int c = calculate_movement(k,j,moves[4]);
                     make_move(k,j,moves,c);
+                }else if(grid[k][j].name == FOX){
+                    grid[k][j].lastGenEat++;
                 }
                 free(moves);
             }
@@ -314,10 +316,6 @@ void generations(int n){
                 if(grid[i][j].name == FOX || grid[i][j].name == RABBIT){
                     grid[i][j].age++;
                     grid_temp[i][j].age++;
-                    if(grid[i][j].name == FOX){
-                        grid[i][j].lastGenEat++;
-                        grid_temp[i][j].lastGenEat++;
-                    }
                 }
             }
         
@@ -330,7 +328,7 @@ void generations(int n){
         printf("PRETA\n");
         sub_generations(1);
         copy_black();
-        worldPrinter();
+        
         for(int i = 0; i < M; i++){
             for(int j = 0; j < N; j++){
                 if(grid[i][j].name == FOX && grid[i][j].lastGenEat == starvationAgeF){
@@ -345,6 +343,7 @@ void generations(int n){
                 }
             }
         }
+        worldPrinter();
     }
     
 }
