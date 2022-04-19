@@ -53,15 +53,17 @@ void copy_black() {
 
 void run_sub_generation(int flag, struct entity* grid, struct entity* grid_temp) {
     int p = 0;
+    int j;
     struct entity* ent; // sus (Check note below)
     int lines = ((M / np) * pid);
 
     if(np == 1) {
+        #pragma omp parallel for private (j)
         for(int k = 0; k < sudoM; k++) {
             //printf("k eh %d em pid %d \n",k,pid);
             p = ((lines + k) % 2 == flag) ? 0 : 1;
 
-            for(int j = p; j < N; j += 2) {
+            for(j = p; j < N; j += 2) {
                 int current = k * N + j;
 
                 ent = &grid[current];
@@ -80,10 +82,12 @@ void run_sub_generation(int flag, struct entity* grid, struct entity* grid_temp)
 
     } else {
         if(pid == 0) { //se pid 0 ignorar ultima linha
+
+            #pragma omp parallel for private (j)
             for(int k = 0; k < sudoM - 1; k++) {
                 p = ((lines + k) % 2 == flag) ? 0 : 1;
 
-                for(int j = p; j < N; j += 2) {
+                for(j = p; j < N; j += 2) {
                     int current = k * N + j;
 
                     ent = &grid[current];
@@ -100,10 +104,12 @@ void run_sub_generation(int flag, struct entity* grid, struct entity* grid_temp)
             }
 
         } else if(pid == np - 1) { //se pid for o ultimo ignorar a primeira linha
+
+            #pragma omp parallel for private (j)
             for(int k = 1; k < sudoM; k++) {
                 p = ((lines + k) % 2 == flag) ? 0 : 1;
 
-                for(int j = p; j < N; j += 2) {
+                for(j = p; j < N; j += 2) {
                     int current = k * N + j;
 
                     ent = &grid[current];
@@ -121,10 +127,12 @@ void run_sub_generation(int flag, struct entity* grid, struct entity* grid_temp)
             }
 
         } else { //se pid for no meio ignorar primeira e ultima linha
+
+            #pragma omp parallel for private (j)
             for(int k = 1; k < sudoM - 1; k++) {
                 p = ((lines + k) % 2 == flag) ? 0 : 1;
 
-                for(int j = p; j < N; j += 2) {
+                for(j = p; j < N; j += 2) {
                     int current = k * N + j;
 
                     ent = &grid[current];
